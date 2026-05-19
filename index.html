@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>元启新思 · 智育红心 | AI+场景思政教育平台</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <style>
+        /* ========== 全局样式 ========== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #FFFFFF;
+            color: #1E1F2A;
+            overflow-x: hidden;
+        }
+
+        #canvas-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+            opacity: 0.4;
+        }
+
+        .bg-glow {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 60%;
+            height: 60%;
+            background: radial-gradient(ellipse at 0% 100%, rgba(196, 30, 58, 0.06), transparent 70%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .navbar,
+        .hero-fullscreen,
+        .modules-section,
+        .footer {
+            position: relative;
+            z-index: 10;
+        }
+
+        /* 导航栏 - 与子页面完全一致 */
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.96);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(196, 30, 58, 0.2);
+            padding: 0.8rem 5%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            z-index: 1000;
+            transition: all 0.3s ease;
+        }
+
+        .logo {
+            font-size: 1.6rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            background: linear-gradient(135deg, #C41E3A, #E67E22);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .logo:hover {
+            opacity: 0.85;
+        }
+
+        .nav-menu {
+            display: flex;
+            gap: 0.8rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .nav-item {
+            position: relative;
+        }
+
+        .nav-link {
+            text-decoration: none;
+            font-weight: 500;
+            color: #2C2E3A;
+            padding: 0.5rem 1.2rem;
+            border-radius: 40px;
+            font-size: 0.9rem;
+            transition: all 0.2s ease;
+            display: inline-block;
+            cursor: pointer;
+            background: transparent;
+            border: none;
+        }
+
+        .nav-link:hover {
+            background: #FFF0ED;
+            color: #C41E3A;
+            transform: translateY(-2px);
+        }
+
+        .dropdown {
+            position: absolute;
+            top: 48px;
+            left: 0;
+            background: #FFFFFF;
+            border-radius: 24px;
+            box-shadow: 0 20px 35px -10px rgba(0, 0, 0, 0.15);
+            min-width: 260px;
+            padding: 0.8rem 0;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-12px);
+            transition: all 0.25s ease;
+            z-index: 1001;
+            border: 1px solid rgba(196, 30, 58, 0.15);
+        }
+
+        .nav-item:hover .dropdown {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .dropdown a {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 0.7rem 1.2rem;
+            text-decoration: none;
+            color: #3A3E4D;
+            font-size: 0.85rem;
+            transition: all 0.15s;
+            border-left: 3px solid transparent;
+        }
+
+        .dropdown a:hover {
+            background: #FEF5F2;
+            color: #C41E3A;
+            border-left-color: #C41E3A;
+            padding-left: 1.4rem;
+        }
+
+        .login-btn {
+            background: #C41E3A;
+            color: white !important;
+            box-shadow: 0 2px 8px rgba(196, 30, 58, 0.25);
+        }
+
+        .login-btn:hover {
+            background: #A0162E;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(196, 30, 58, 0.35);
+        }
+
+        /* 全屏首屏 Hero */
+        .hero-fullscreen {
+            height: 100vh;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            position: relative;
+        }
+
+        .hero-content {
+            max-width: 1000px;
+            padding: 0 5%;
+        }
+
+        .hero-badge {
+            display: inline-block;
+            background: rgba(196, 30, 58, 0.06);
+            border-radius: 60px;
+            padding: 0.4rem 1.5rem;
+            font-size: 1rem;
+            font-weight: 600;
+            color: #C41E3A;
+            border: 1px solid rgba(196, 30, 58, 0.2);
+            margin-bottom: 1.8rem;
+        }
+
+        .hero-fullscreen h1 {
+            font-size: 5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #C41E3A, #E67E22);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            letter-spacing: -0.02em;
+            margin-bottom: 1rem;
+        }
+
+        .hero-fullscreen p {
+            font-size: 1.3rem;
+            color: #5B5F6E;
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        .scroll-down,
+        .scroll-up {
+            position: absolute;
+            cursor: pointer;
+            font-size: 3rem;
+            font-weight: 800;
+            color: #C41E3A;
+            transition: all 0.2s;
+            background: transparent;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0.75;
+            letter-spacing: -2px;
+            width: 60px;
+            height: 60px;
+            line-height: 1;
+        }
+
+        .scroll-down {
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%);
+            animation: gentleBounce 2s infinite;
+        }
+
+        .scroll-up {
+            top: -40px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .modules-section {
+            position: relative;
+        }
+
+        .scroll-down:hover,
+        .scroll-up:hover {
+            opacity: 1;
+            transform: translateX(-50%) scale(1.1);
+            color: #9E162E;
+        }
+
+        @keyframes gentleBounce {
+
+            0%,
+            100% {
+                transform: translateX(-50%) translateY(0);
+            }
+
+            50% {
+                transform: translateX(-50%) translateY(8px);
+            }
+        }
+
+        /* 五大核心引擎区域 */
+        .modules-section {
+            background: #FFFFFF;
+            padding: 5rem 5% 5rem;
+            scroll-margin-top: 70px;
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .section-header h2 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #C41E3A;
+        }
+
+        .section-header p {
+            color: #6A6F7F;
+            margin-top: 0.5rem;
+        }
+
+        .card-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        .wide-card {
+            position: relative;
+            border-radius: 32px;
+            overflow: hidden;
+            box-shadow: 0 20px 35px -12px rgba(0, 0, 0, 0.08);
+            transition: all 0.4s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+            cursor: pointer;
+            background-size: cover;
+            background-position: center;
+            min-height: 340px;
+        }
+
+        .card-overlay {
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 52%;
+            height: 100%;
+            background: linear-gradient(90deg, rgba(255, 255, 255, 0) 0%, #FFFFFF 40%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 2rem;
+        }
+
+        .card-text {
+            max-width: 90%;
+            margin: 0 auto;
+        }
+
+        .card-text h3 {
+            font-size: 1.9rem;
+            font-weight: 700;
+            color: #C41E3A;
+            margin-bottom: 0.75rem;
+        }
+
+        .card-text p {
+            color: #3E4357;
+            margin-bottom: 1.2rem;
+            line-height: 1.45;
+            font-size: 0.95rem;
+        }
+
+        .tech-badge-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.7rem;
+            justify-content: center;
+            margin-top: 1rem;
+        }
+
+        .tech-badge {
+            background: #FEF2EF;
+            color: #C41E3A;
+            font-size: 0.8rem;
+            font-weight: 600;
+            padding: 0.3rem 1.1rem;
+            border-radius: 40px;
+            white-space: nowrap;
+        }
+
+        .wide-card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 30px 40px -15px rgba(196, 30, 58, 0.2);
+        }
+
+        .stats-bar {
+            display: flex;
+            justify-content: center;
+            gap: 3rem;
+            flex-wrap: wrap;
+            background: #F8F9FC;
+            padding: 1.5rem 2rem;
+            margin: 3rem auto 1rem;
+            max-width: 1000px;
+            border-radius: 60px;
+            border: 1px solid #F0EFF2;
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-num {
+            font-size: 2rem;
+            font-weight: 800;
+            color: #C41E3A;
+        }
+
+        .stat-label {
+            font-size: 0.85rem;
+            color: #7E8299;
+        }
+
+        .footer {
+            background: #8B1E2C;
+            color: #FEF2EF;
+            padding: 2rem 5%;
+            text-align: center;
+            font-size: 0.85rem;
+            border: none;
+        }
+
+        @media (max-width: 900px) {
+            .hero-fullscreen h1 {
+                font-size: 2.5rem;
+            }
+
+            .card-overlay {
+                width: 100%;
+                background: linear-gradient(90deg, rgba(255, 255, 255, 0.2), #FFFFFF);
+            }
+
+            .navbar {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+
+            .scroll-down,
+            .scroll-up {
+                font-size: 2.5rem;
+                width: 50px;
+                height: 50px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div id="canvas-container"></div>
+    <div class="bg-glow"></div>
+    <div class="navbar">
+        <div class="logo-area">
+            <a href="index.html" class="logo">元启新思</a>
+        </div>
+        <div class="nav-menu">
+            <!-- 教育平台 -->
+            <div class="nav-item">
+                <span class="nav-link">教育平台</span>
+                <div class="dropdown">
+                    <a href="module-metaverse/hongse.html">🌌 红色历史教育社区</a>
+                    <a href="module-metaverse/esg.html">🏭 企业ESG思政基地</a>
+                    <a href="module-metaverse/xiangcun.html">🌾 乡村文化元剧场</a>
+                    <a href="module-metaverse/feiyi.html">🎨 非遗数字孪生实验室</a>
+                    <a href="module-metaverse/map.html">🗺️ 红色足迹全景地图</a>
+                    <a href="module-metaverse/task.html">📜 思政任务中心</a>
+                </div>
+            </div>
+            <!-- AI教学系统 -->
+            <div class="nav-item">
+                <span class="nav-link">AI教学系统</span>
+                <div class="dropdown">
+                    <a href="module-ai/ai_virtual.html">🤖 红色历史AI虚拟偶像</a>
+                    <a href="module-ai/villager.html">👩‍🌾 AI数字村民直播间</a>
+                    <a href="module-ai/debate.html">⚖️ AI思政辩论机器人</a>
+                    <a href="module-ai/quiz.html">💡 思政智能问答</a>
+                    <a href="module-ai/timeline.html">📖 党史智能时间轴</a>
+                </div>
+            </div>
+            <!-- 游戏化学习 -->
+            <div class="nav-item">
+                <span class="nav-link">游戏化学习</span>
+                <div class="dropdown">
+                    <a href="module-game/ar_map.html">🗺️ 非遗AR寻宝地图</a>
+                    <a href="module-game/story.html">🎬 剧情闯关·改革之路</a>
+                    <a href="module-game/escape.html">🔐 红色密室逃脱</a>
+                    <a href="module-game/leaderboard.html">🏆 思政积分排行榜</a>
+                    <a href="module-game/badge.html">⭐ 成就徽章系统</a>
+                </div>
+            </div>
+            <!-- 区块链证书 -->
+            <div class="nav-item">
+                <span class="nav-link">区块链证书</span>
+                <div class="dropdown">
+                    <a href="module-blockchain/my_cert.html">📜 我的NFT证书</a>
+                    <a href="module-blockchain/verify.html">🔍 证书链上验证</a>
+                    <a href="module-blockchain/record.html">⛓️ 学习行为上链存证</a>
+                    <a href="module-blockchain/enterprise.html">🏛️ 企业凭证核验</a>
+                </div>
+            </div>
+            <!-- 学情分析 -->
+            <div class="nav-item">
+                <span class="nav-link">学情分析</span>
+                <div class="dropdown">
+                    <a href="module-analytics/dashboard.html">📊 学习数据仪表盘</a>
+                    <a href="module-analytics/heatmap.html">🔥 参与度热力图</a>
+                    <a href="module-analytics/recommend.html">🧠 AI个性化推荐</a>
+                    <a href="module-analytics/report.html">📑 思政素养报告</a>
+                </div>
+            </div>
+            <a href="login.html" class="nav-link login-btn">登录/注册</a>
+        </div>
+    </div>
+    <section class="hero-fullscreen" id="heroSection">
+        <div class="hero-content">
+            <div class="hero-badge">AI + 教育 · 思政教育新范式</div>
+            <h1>元启新思·智育红心</h1>
+            <p>沉浸式红色教育 | 智能AI辩论 | 非遗AR寻宝 | 区块链学习认证<br>构建全维度数字化思政生态</p>
+        </div>
+        <div class="scroll-down" id="scrollDownBtn">››</div>
+    </section>
+    <section class="modules-section" id="modulesSection">
+        <div class="scroll-up" id="scrollUpBtn">‹‹</div>
+        <div class="section-header">
+            <h2>智慧思政 · 五大核心引擎</h2>
+            <p>融合前沿科技，重塑思政教育体验</p>
+        </div>
+        <div class="card-container">
+            <div class="wide-card" onclick="location.href='module-metaverse/index.html'"
+                style="background-image: url('https://picsum.photos/id/104/1400/500');">
+                <div class="card-overlay">
+                    <div class="card-text">
+                        <h3>🌌 教育思政场景平台</h3>
+                        <p>数字孪生复刻红色遗址，企业ESG、非遗实验室等沉浸体验。</p>
+                        <div class="tech-badge-group"><span class="tech-badge">数字孪生</span><span
+                                class="tech-badge">实时交互</span></div>
+                    </div>
+                </div>
+            </div>
+            <div class="wide-card" onclick="location.href='module-ai/index.html'"
+                style="background-image: url('https://picsum.photos/id/91/1400/500');">
+                <div class="card-overlay">
+                    <div class="card-text">
+                        <h3>🤖 AI思政智能体系统</h3>
+                        <p>AI虚拟偶像、数字村民、辩论机器人，全天候智能助教。</p>
+                        <div class="tech-badge-group"><span class="tech-badge">大语言模型</span><span
+                                class="tech-badge">情感计算</span></div>
+                    </div>
+                </div>
+            </div>
+            <div class="wide-card" onclick="location.href='module-game/index.html'"
+                style="background-image: url('https://picsum.photos/id/96/1400/500');">
+                <div class="card-overlay">
+                    <div class="card-text">
+                        <h3>🎮 思政游戏化乐园</h3>
+                        <p>AR寻宝、剧情闯关、密室逃脱，寓教于乐。</p>
+                        <div class="tech-badge-group"><span class="tech-badge">AR互动</span><span
+                                class="tech-badge">闯关激励</span></div>
+                    </div>
+                </div>
+            </div>
+            <div class="wide-card" onclick="location.href='module-blockchain/index.html'"
+                style="background-image: url('https://picsum.photos/id/29/1400/500');">
+                <div class="card-overlay">
+                    <div class="card-text">
+                        <h3>🔗 区块链学分证书系统</h3>
+                        <p>学习成果NFT化，行为上链存证，企业可验证。</p>
+                        <div class="tech-badge-group"><span class="tech-badge">联盟链存证</span><span
+                                class="tech-badge">NFT凭证</span></div>
+                    </div>
+                </div>
+            </div>
+            <div class="wide-card" onclick="location.href='module-analytics/index.html'"
+                style="background-image: url('https://picsum.photos/id/26/1400/500');">
+                <div class="card-overlay">
+                    <div class="card-text">
+                        <h3>📊 思政大数据学情分析</h3>
+                        <p>多维度仪表盘、热力图、AI推荐，精准教学干预。</p>
+                        <div class="tech-badge-group"><span class="tech-badge">数据可视化</span><span
+                                class="tech-badge">AI推荐</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="stats-bar">
+            <div class="stat">
+                <div class="stat-num">28+</div>
+                <div class="stat-label">高校合作试点</div>
+            </div>
+            <div class="stat">
+                <div class="stat-num">18,400+</div>
+                <div class="stat-label">认证学习人次</div>
+            </div>
+            <div class="stat">
+                <div class="stat-num">4,200+</div>
+                <div class="stat-label">链上证书发放</div>
+            </div>
+            <div class="stat">
+                <div class="stat-num">97%</div>
+                <div class="stat-label">学习者满意度</div>
+            </div>
+        </div>
+    </section>
+    <footer class="footer">
+        <p>© 2025 元启新思 · 智育红心 | 大连财经学院大学生创新训练项目</p>
+        <p>融合前沿科技，赋能思政教育数字化转型</p>
+    </footer>
+    <script type="importmap">
+    { "imports": { "three": "https://unpkg.com/three@0.128.0/build/three.module.js" } }
+</script>
+    <script type="module">
+        import * as THREE from 'three';
+        const container = document.getElementById('canvas-container');
+        const scene = new THREE.Scene(); scene.background = null;
+        const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.set(6, 4, 14);
+        const renderer = new THREE.WebGLRenderer({ alpha: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setClearColor(0x000000, 0);
+        container.appendChild(renderer.domElement);
+        const group = new THREE.Group();
+        const material = new THREE.LineBasicMaterial({ color: 0xC47E6A });
+        for (let i = -4; i <= 4; i++) for (let j = -4; j <= 4; j++) for (let k = -4; k <= 4; k++) {
+            if (Math.abs(i) < 2 && Math.abs(j) < 2 && Math.abs(k) < 2) continue;
+            if (Math.random() > 0.65) continue;
+            const geo = new THREE.BoxGeometry(0.9, 0.9, 0.9);
+            const edges = new THREE.EdgesGeometry(geo);
+            const wire = new THREE.LineSegments(edges, material);
+            wire.position.set(i * 2.8, j * 2.2 * 0.7, k * 2.8);
+            group.add(wire);
+        }
+        scene.add(group);
+        const glow = new THREE.Mesh(new THREE.SphereGeometry(0.4, 8, 8), new THREE.MeshStandardMaterial({ color: 0xC41E3A, emissive: 0x331111, roughness: 0.2 }));
+        scene.add(glow);
+        const ambient = new THREE.AmbientLight(0xffffff, 0.5);
+        scene.add(ambient);
+        const pointLight = new THREE.PointLight(0xffaa88, 0.6);
+        pointLight.position.set(2, 3, 4);
+        scene.add(pointLight);
+        let time = 0;
+        function animate() {
+            requestAnimationFrame(animate);
+            time += 0.005;
+            group.rotation.y = Math.sin(time * 0.2) * 0.2;
+            group.rotation.x = Math.sin(time * 0.15) * 0.1;
+            glow.position.x = Math.sin(time) * 0.6;
+            glow.position.y = Math.cos(time * 0.9) * 0.5;
+            camera.lookAt(0, 0, 0);
+            renderer.render(scene, camera);
+        }
+        animate();
+        window.addEventListener('resize', () => { camera.aspect = window.innerWidth / window.innerHeight; camera.updateProjectionMatrix(); renderer.setSize(window.innerWidth, window.innerHeight); });
+    </script>
+    <script>
+        const scrollDown = document.getElementById('scrollDownBtn');
+        const scrollUp = document.getElementById('scrollUpBtn');
+        const hero = document.getElementById('heroSection');
+        const modulesSec = document.getElementById('modulesSection');
+        if (scrollDown) scrollDown.addEventListener('click', () => modulesSec.scrollIntoView({ behavior: 'smooth', block: 'start' }));
+        if (scrollUp) scrollUp.addEventListener('click', () => hero.scrollIntoView({ behavior: 'smooth', block: 'start' }));
+        // Logo 点击返回首页（已通过 a 标签实现，无需额外代码）
+    </script>
+</body>
+
+</html>
